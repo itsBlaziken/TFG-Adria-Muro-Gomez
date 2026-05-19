@@ -1,0 +1,15 @@
+rms
+energy
+max_amplitude
+mean_amplitude
+std_amplitude
+peak_to_peak
+crest_factor
+temp
+energy_low
+energy_mid
+energy_high
+ratio_low
+ratio_mid
+ratio_high
+dominant_frequency

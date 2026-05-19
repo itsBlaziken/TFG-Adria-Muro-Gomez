@@ -1,0 +1,13 @@
+mag_x
+mag_y
+mag_z
+mag_total
+x_dominant
+y_dominant
+z_dominant
+fp_energy
+p_energy
+energy_ratio
+rms_p
+rms_fp
+temp
