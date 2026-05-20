@@ -21,7 +21,7 @@ print("=" * 80)
 
 # PASO 1: CARGAR DATOS CON FORMATO "READINGS"
 print("\n[PASO 1] Cargando datos de sensores con format 'readings'...")
-json_path = r'C:/Users/adria/OneDrive/Escritorio/TFG/data/mafaulda/DatasetI.json'
+json_path = r'C:/Users/adria/OneDrive/Escritorio/TFG/data/DatasetI.json'
 
 records = []
 with open(json_path, 'r', encoding='utf-8') as f:

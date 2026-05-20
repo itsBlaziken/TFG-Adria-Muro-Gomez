@@ -41,7 +41,7 @@ print("="*70)
 print("\n[PASO 1] Cargando datos del dataset...")
 
 try:
-    with open('C:/Users/adria/OneDrive/Escritorio/TFG/data/mafaulda/DatasetI.json', 'r') as f:
+    with open('C:/Users/adria/OneDrive/Escritorio/TFG/data/DatasetI.json', 'r') as f:
         lines = f.readlines()
     print(f"[OK] Archivo cargado: {len(lines)} líneas")
 except Exception as e:

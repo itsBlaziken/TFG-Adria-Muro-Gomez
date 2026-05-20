@@ -142,7 +142,7 @@ if __name__ == '__main__':
     clf = AEInnovaFaultClassifier('models')
 
     # === CARGA DATASET ===
-    json_path = r'C:/Users/adria/OneDrive/Escritorio/TFG/data/mafaulda/DatasetI.json'
+    json_path = r'C:/Users/adria/OneDrive/Escritorio/TFG/data/DatasetI.json'
 
     frequencies_list = []
     values_list = []
