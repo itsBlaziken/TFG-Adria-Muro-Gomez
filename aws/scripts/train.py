@@ -1,17 +1,21 @@
-# Script que corre DENTRO del SageMaker Training Job (contenedor sklearn)
+# SageMaker Training Job
 # Input:  SM_CHANNEL_TRAIN / /opt/ml/input/data/train/features.csv
-# Output: SM_MODEL_DIR    / /opt/ml/model/  (SageMaker lo comprime a model.tar.gz)
+# Output: SM_MODEL_DIR     / /opt/ml/model/
 
 import os
 import argparse
 import pickle
+import warnings
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import IsolationForest, GradientBoostingClassifier
 from sklearn.cluster import KMeans
-from sklearn.model_selection import StratifiedKFold, cross_val_score
+from sklearn.ensemble import IsolationForest, GradientBoostingClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, f1_score
+from sklearn.model_selection import StratifiedKFold
+from sklearn.preprocessing import StandardScaler
+warnings.filterwarnings('ignore')
 
+# Característiques espectrals que s'extreuen de cada registre
 FEATURE_COLS = [
     'rms', 'energy', 'max_amplitude', 'mean_amplitude', 'std_amplitude',
     'peak_to_peak', 'crest_factor', 'temp',
@@ -20,65 +24,76 @@ FEATURE_COLS = [
 ]
 
 
-def train(train_dir, model_dir):
-    csv_path = os.path.join(train_dir, 'features.csv')
-    print(f"Cargando datos: {csv_path}")
-    df = pd.read_csv(csv_path)
-    print(f"Registros cargados: {len(df)}")
-
+def train(df, model_dir):
     X = df[FEATURE_COLS].fillna(0).values
 
-    # --- Normalización ---
-    scaler = StandardScaler()
+    # Normalització de les característiques per donar la mateixa escala a totes les variables
+    scaler   = StandardScaler()
     X_scaled = scaler.fit_transform(X)
 
-    # --- Isolation Forest ---
+    # Detecció d'anomalies amb Isolation Forest: contaminació adaptativa entre el 10% i el 20%
     contamination = min(0.20, max(0.10, len(X) / 10000))
-    iso = IsolationForest(contamination=contamination, n_estimators=100, random_state=42)
+    iso   = IsolationForest(contamination=contamination, n_estimators=100, random_state=42)
     preds = iso.fit_predict(X_scaled)
 
-    anomaly_mask = preds == -1
-    n_anom = anomaly_mask.sum()
-    print(f"Anomalias detectadas: {n_anom} ({100*n_anom/len(X):.1f}%)")
+    mask   = preds == -1
+    n_anom = int(mask.sum())
+    print(f"Anomalies detectades: {n_anom} ({100 * n_anom / len(X):.1f}%)")
 
-    X_anom = X_scaled[anomaly_mask]
+    X_anom = X_scaled[mask]
 
-    # --- K-Means sobre anomalias ---
+    # Agrupació de les anomalies en 4 tipologies de fallo amb K-Means
     kmeans = KMeans(n_clusters=4, n_init=10, random_state=42)
     labels = kmeans.fit_predict(X_anom)
 
-    unique, counts = np.unique(labels, return_counts=True)
-    for u, c in zip(unique, counts):
-        print(f"  Cluster {u}: {c} muestras ({100*c/len(labels):.1f}%)")
+    for u, c in zip(*np.unique(labels, return_counts=True)):
+        print(f"  Cluster {u}: {c} mostres ({100 * c / len(labels):.1f}%)")
 
-    # --- Gradient Boosting + validacion cruzada ---
-    gb = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1,
-                                    max_depth=5, random_state=42)
-    skf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
-    cv_scores = cross_val_score(gb, X_anom, labels, cv=skf, scoring='accuracy')
-    print(f"CV Accuracy: {cv_scores.mean()*100:.2f}% +/- {cv_scores.std()*100:.2f}%")
+    # Validació creuada de 5 folds del classificador Gradient Boosting
+    skf       = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    cv_scores = []
+    for fold, (tr, te) in enumerate(skf.split(X_anom, labels), 1):
+        gb = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1,
+                                        max_depth=5, random_state=42)
+        gb.fit(X_anom[tr], labels[tr])
+        score = accuracy_score(labels[te], gb.predict(X_anom[te]))
+        cv_scores.append(score)
+        print(f"  Fold {fold}: {score * 100:.2f}%")
 
-    gb.fit(X_anom, labels)
+    print(f"CV Accuracy: {np.mean(cv_scores) * 100:.2f}% ± {np.std(cv_scores) * 100:.2f}%")
 
-    # --- Guardar modelos ---
+    # Entrenament final del classificador amb totes les anomalies
+    gb_final = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1,
+                                          max_depth=5, random_state=42)
+    gb_final.fit(X_anom, labels)
+
+    # Avaluació sobre el conjunt d'entrenament i importància de les característiques
+    y_pred = gb_final.predict(X_anom)
+    print(f"Train Accuracy: {accuracy_score(labels, y_pred) * 100:.2f}%")
+    print(f"F1-Score (macro): {f1_score(labels, y_pred, average='macro') * 100:.2f}%")
+    print(f"\nConfusion Matrix:\n{confusion_matrix(labels, y_pred)}")
+    print(f"\nClassification Report:\n{classification_report(labels, y_pred)}")
+
+    top_idx = np.argsort(gb_final.feature_importances_)[-5:][::-1]
+    print("Top 5 features per importància:")
+    for i, idx in enumerate(top_idx, 1):
+        print(f"  {i}. {FEATURE_COLS[idx]}: {gb_final.feature_importances_[idx] * 100:.1f}%")
+
+    # Serialització dels quatre models i la llista de features al directori de sortida
     os.makedirs(model_dir, exist_ok=True)
-
-    artifacts = {
-        'isolation_forest.pkl': iso,
-        'kmeans.pkl':           kmeans,
-        'gradient_boosting.pkl': gb,
-        'scaler.pkl':           scaler,
-    }
-    for fname, obj in artifacts.items():
-        path = os.path.join(model_dir, fname)
-        with open(path, 'wb') as f:
+    for fname, obj in [
+        ('aeinnova_anomaly_detector.pkl',     iso),
+        ('aeinnova_fault_type_classifier.pkl', gb_final),
+        ('aeinnova_scaler_anomaly.pkl',        scaler),
+        ('aeinnova_kmeans.pkl',                kmeans),
+    ]:
+        with open(os.path.join(model_dir, fname), 'wb') as f:
             pickle.dump(obj, f)
-        print(f"[OK] Guardado: {path}")
 
-    with open(os.path.join(model_dir, 'feature_cols.txt'), 'w') as f:
+    with open(os.path.join(model_dir, 'aeinnova_feature_names.txt'), 'w') as f:
         f.write('\n'.join(FEATURE_COLS))
 
-    print(f"\nEntrenamiento completado. Modelos en: {model_dir}/")
+    print(f"Models guardats a: {model_dir}/")
 
 
 if __name__ == '__main__':
@@ -88,4 +103,9 @@ if __name__ == '__main__':
     parser.add_argument('--train',     type=str,
                         default=os.environ.get('SM_CHANNEL_TRAIN', '/opt/ml/input/data/train'))
     args = parser.parse_args()
-    train(args.train, args.model_dir)
+
+    # Llegeix el CSV de característiques del canal d'entrada de SageMaker
+    df = pd.read_csv(os.path.join(args.train, 'features.csv'))
+    print(f"Característiques carregades: {len(df)} registres")
+
+    train(df, args.model_dir)

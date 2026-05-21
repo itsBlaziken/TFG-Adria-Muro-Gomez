@@ -1,7 +1,6 @@
-"""
-Dashboard interactivo - AEInnova Predictive Maintenance
-Ejecutar con:  streamlit run dashboard.py
-"""
+# Dashboard interactiu de manteniment predictiu AEInnova.
+# Carrega les dades directament des de S3 i les visualitza amb Streamlit i Plotly.
+# Executar amb: streamlit run dashboard.py
 
 import streamlit as st
 import pandas as pd
@@ -13,7 +12,7 @@ import boto3
 import tempfile
 import os
 
-# ─── Configuració de la pàgina ───────────────────────────────────────────────
+# Configuració de la pàgina: layout wide per aprofitar l'amplada de la pantalla
 st.set_page_config(
     page_title="AEInnova — Predictive Maintenance",
     page_icon="⚙️",
@@ -21,6 +20,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Bucket S3 i paleta de colors per tipus de fallo i nivell de severitat
 BUCKET   = "aeinnova-tfg-836321169819"
 REGION   = "eu-west-1"
 PALETTE  = {
@@ -32,7 +32,7 @@ PALETTE  = {
 }
 SEV_COLORS = {"HIGH": "#e63946", "MEDIUM": "#f4a261", "LOW": "#2a9d8f", "NONE": "#adb5bd"}
 
-# ─── Càrrega de dades ────────────────────────────────────────────────────────
+# Càrrega de dades des de S3 amb cache de 5 minuts per reduir peticions al bucket
 @st.cache_data(ttl=300)
 def load_data():
     s3  = boto3.client("s3", region_name=REGION)
@@ -48,16 +48,14 @@ def load_data():
     df = pd.concat([features.reset_index(drop=True),
                     predictions.reset_index(drop=True)], axis=1)
 
-    # Anomalies only
+    # Subconjunt d'anomalies i etiqueta llegible per a l'eix de mesura
     df_anom = df[df["is_anomaly"] == True].copy()
-
-    # Axis / mode com a categories llegibles
-    df["axis_label"]  = df["axis"].map({1.0: "X", 2.0: "Y", 3.0: "Z"}).fillna(df["axis"].astype(str))
+    df["axis_label"]      = df["axis"].map({1.0: "X", 2.0: "Y", 3.0: "Z"}).fillna(df["axis"].astype(str))
     df_anom["axis_label"] = df["axis_label"]
 
     return df, df_anom
 
-# ─── Sidebar ────────────────────────────────────────────────────────────────
+# Sidebar amb filtres interactius per severitat i tipus de fallo
 with st.sidebar:
     st.image("https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg", width=80)
     st.title("AEInnova")
@@ -82,7 +80,7 @@ with st.sidebar:
     st.divider()
     st.caption("Font: AEInnova · Dataset NOD-0007")
 
-# ─── Càrrega ─────────────────────────────────────────────────────────────────
+# Càrrega inicial i aplicació dels filtres seleccionats al sidebar
 with st.spinner("Carregant dades des de S3..."):
     df, df_anom = load_data()
 
@@ -91,12 +89,11 @@ df_filtered = df_anom[
     df_anom["fault_label"].isin(filter_fault)
 ].copy()
 
-# ─── Títol ───────────────────────────────────────────────────────────────────
 st.title("⚙️ AEInnova — Predictive Maintenance Dashboard")
 st.caption(f"Pipeline: Isolation Forest → K-Means → Gradient Boosting · Desplegat a AWS SageMaker")
 st.divider()
 
-# ─── KPI Cards ───────────────────────────────────────────────────────────────
+# KPIs principals: totals, taxa d'anomalia, severitat alta i accuracy de validació
 k1, k2, k3, k4, k5 = st.columns(5)
 total        = len(df)
 n_anom       = len(df_anom)
@@ -112,7 +109,7 @@ k5.metric("Accuracy CV",           "99.45%")
 
 st.divider()
 
-# ─── Fila 1: Distribucions principals ────────────────────────────────────────
+# Primera fila: distribució per tipus de fallo, per severitat i resum de barres
 col1, col2, col3 = st.columns([2, 2, 1])
 
 with col1:
@@ -157,7 +154,7 @@ with col3:
 
 st.divider()
 
-# ─── Fila 2: Per dispositiu i per eix ────────────────────────────────────────
+# Segona fila: anomalies desglosades per dispositiu (dev_eui) i per eix de mesura
 col4, col5 = st.columns(2)
 
 with col4:
@@ -198,7 +195,7 @@ with col5:
 
 st.divider()
 
-# ─── Fila 3: Anàlisi espectral ────────────────────────────────────────────────
+# Tercera fila: histograma de scores d'anomalia i scatter RMS vs energia total
 col6, col7 = st.columns(2)
 
 with col6:
@@ -229,7 +226,7 @@ with col7:
 
 st.divider()
 
-# ─── Fila 4: Característiques espectrals ─────────────────────────────────────
+# Quarta fila: box plot interactiu de qualsevol característica per tipus de fallo
 st.subheader("Distribució de Característiques Espectrals per Tipus de Fallo")
 
 feat_cols = ["rms", "energy_low", "energy_mid", "energy_high",
@@ -249,7 +246,7 @@ if available:
 
 st.divider()
 
-# ─── Fila 5: Anomalies per mode ───────────────────────────────────────────────
+# Cinquena fila: anomalies per mode de captació i heatmap dispositiu × tipus de fallo
 col8, col9 = st.columns(2)
 
 with col8:
@@ -281,7 +278,7 @@ with col9:
 
 st.divider()
 
-# ─── Taula de les pitjors alertes ────────────────────────────────────────────
+# Taula de les 20 alertes amb el score d'anomalia més elevat, coloritzada per severitat
 st.subheader("Top 20 Alertes per Severitat")
 display_cols = [c for c in ["dev_eui", "axis_label", "mode", "fault_label",
                              "severity", "severity_level"] if c in df_filtered.columns]

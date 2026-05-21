@@ -1,12 +1,11 @@
-# SageMaker Batch Transform
-# SageMaker crida: model_fn → input_fn → predict_fn → output_fn
-
-import io
 import json
 import os
 import pickle
 import numpy as np
-import pandas as pd
+
+# Rutes locals dels models entrenats i del dataset per a l'avaluació
+MODEL_DIR = r'C:/Users/adria/OneDrive/Escritorio/TFG/models'
+DATA_PATH = r'C:/Users/adria/OneDrive/Escritorio/TFG/data/DatasetI.json'
 
 # Característiques espectrals en el mateix ordre que durant l'entrenament
 FEATURE_COLS = [
@@ -80,29 +79,37 @@ def predict_batch(X, models):
     return results
 
 
-# Interfície SageMaker: les quatre funcions que el framework crida automàticament
+if __name__ == '__main__':
+    import pandas as pd
+    from train_fault_types import extract_features, load_dataset
 
-def model_fn(model_dir):
-    return load_models(model_dir)
+    # Càrrega dels models i del dataset complet per a l'avaluació
+    models  = load_models(MODEL_DIR)
+    records = load_dataset(DATA_PATH)
 
+    print(f"Total mostres carregades: {len(records)}")
 
-def input_fn(request_body, content_type='text/csv'):
-    # Parseja el cos de la petició com un CSV i valida les columnes necessàries
-    if content_type != 'text/csv':
-        raise ValueError(f"Content-type no suportat: {content_type}")
-    df      = pd.read_csv(io.StringIO(request_body))
-    missing = [c for c in FEATURE_COLS if c not in df.columns]
-    if missing:
-        raise ValueError(f"Columnes faltants: {missing}")
-    return df[FEATURE_COLS].fillna(0).values
+    # Extracció de les característiques en el mateix ordre que l'entrenament
+    rows = []
+    for r in records:
+        try:
+            feat = extract_features(r)
+            rows.append([feat[c] for c in FEATURE_COLS])
+        except Exception:
+            pass
 
+    X       = np.array(rows)
+    results = predict_batch(X, models)
 
-def predict_fn(data, models):
-    return predict_batch(data, models)
+    # Resum de les prediccions i distribució per tipus de fallo
+    n_anom = sum(r['is_anomaly'] for r in results)
+    print(f"Anomalies detectades: {n_anom} ({100 * n_anom / len(results):.1f}%)")
 
+    counts = {k: 0 for k in FAULT_TYPES}
+    for r in results:
+        if r['is_anomaly']:
+            counts[r['fault_type']] += 1
 
-def output_fn(predictions, accept='application/json'):
-    # Serialitza les prediccions com a JSON per retornar-les al client
-    if accept != 'application/json':
-        raise ValueError(f"Accept type no suportat: {accept}")
-    return json.dumps(predictions, ensure_ascii=False), 'application/json'
+    print("Distribució de fallos:")
+    for ft, label in FAULT_TYPES.items():
+        print(f"  {label}: {counts[ft]}")
