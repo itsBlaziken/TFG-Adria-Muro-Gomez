@@ -63,4 +63,4 @@ if __name__ == "__main__":
         f.write(model_uri)
 
     print(f"\nModels a: {model_uri}")
-    print("Ara executa: python 4_inference_local_upload.py")
+    print("Ara executa: python inference_local_upload.py")

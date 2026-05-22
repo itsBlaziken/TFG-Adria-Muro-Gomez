@@ -68,4 +68,4 @@ if __name__ == "__main__":
     bucket_name = get_bucket_name()
     create_bucket(bucket_name)
     upload_dataset(bucket_name)
-    print("\nFet. Ara executa: python 2_run_processing.py")
+    print("\nFet. Ara executa: python run_processing.py")

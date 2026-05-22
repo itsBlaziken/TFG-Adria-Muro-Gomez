@@ -107,4 +107,4 @@ print(f"Features a: s3://{bucket}/{S3_PROCESSED}/features.csv")
 with open(".last_processing_job", "w") as f:
     f.write(job_name)
 
-print("Ara executa: python 3_train_local_upload.py")
+print("Ara executa: python train_local_upload.py")

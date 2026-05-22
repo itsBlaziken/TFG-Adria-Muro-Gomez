@@ -56,4 +56,4 @@ def create_role():
 
 if __name__ == "__main__":
     role_arn = create_role()
-    print("Fet. Ara executa: python 1_setup_s3.py")
+    print("Fet. Ara executa: python setup_s3.py")

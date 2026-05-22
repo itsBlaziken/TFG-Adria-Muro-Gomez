@@ -111,4 +111,4 @@ if __name__ == "__main__":
         print(f"  {label}: {n}")
 
     print(f"\nResultats a S3: s3://{bucket}/{S3_OUTPUTS}/")
-    print("Ara executa: python 5_generate_alerts.py")
+    print("Ara executa: python generate_alerts.py")
