@@ -110,11 +110,6 @@ Distribució de tipologies detectades:
 - Degradació general: 15,1%
 - Desbalanceig mecànic: 13,7%
 
-Importància de característiques en el model Gradient Boosting:
-- Desviació estàndard de l'amplitud: 32,71%
-- Energia en alta freqüència: 28,79%
-- Energia en banda mitjana: 17,38%
-
 ---
 
 ## Arquitectura AWS
