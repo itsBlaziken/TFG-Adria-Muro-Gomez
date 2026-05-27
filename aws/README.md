@@ -17,23 +17,6 @@ En aquest projecte s'utilitzen tres serveis principals:
 | **Amazon EC2** | Servidor virtual | Allotjar el dashboard web accessible des del navegador |
 | **AWS IAM** | Sistema de permisos | Controlar qui pot accedir a cada recurs d'AWS |
 
----
-
-## Conceptes d'AWS que cal entendre
-
-**Bucket S3**: és com una carpeta principal al núvol. Dins hi pots crear subcarpetes (prefixos) per organitzar les dades. El nom ha de ser únic a tot AWS, per això s'hi afegeix el número de compte.
-
-**Rol IAM**: és com un carnet d'identitat amb permisos. Quan SageMaker o EC2 necessiten llegir fitxers de S3, ho fan amb un rol que els autoritza. Així no cal posar contrasenyes al codi.
-
-**Processing Job de SageMaker**: és com enviar un script Python a executar en un ordinador virtual gestionat per AWS. AWS arrenca el contenidor, executa el codi, guarda el resultat a S3 i apaga la màquina automàticament.
-
-**Contenidor Docker**: és un paquet que inclou el sistema operatiu, les llibreries i el codi, de manera que sempre s'executa igual independentment de la màquina. SageMaker utilitza contenidors predefinits d'Amazon per a scikit-learn, PyTorch, etc.
-
-**Instància EC2**: és un ordinador virtual que funciona de manera contínua. S'utilitza per allotjar el dashboard Streamlit que els usuaris poden visitar des del navegador.
-
-**Security Group**: és com un tallafocs virtual. Controla quins ports de la instència EC2 són accessibles des d'internet.
-
----
 
 ## Arquitectura del sistema
 
