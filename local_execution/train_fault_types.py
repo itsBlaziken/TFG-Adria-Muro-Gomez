@@ -15,12 +15,14 @@ warnings.filterwarnings('ignore')
 DATA_PATH = r'C:/Users/adria/OneDrive/Escritorio/TFG/data/DatasetI.json'
 MODEL_DIR = r'C:/Users/adria/OneDrive/Escritorio/TFG/models'
 
-# Característiques espectrals que s'extreuen de cada registre
+# Característiques espectrals + mode operatiu i eix físic.
+# Mode i eix s'inclouen perquè el rang de freqüències mesurat varia amb el mode.
 FEATURE_COLS = [
     'rms', 'energy', 'max_amplitude', 'mean_amplitude', 'std_amplitude',
     'peak_to_peak', 'crest_factor', 'temp',
     'energy_low', 'energy_mid', 'energy_high',
     'ratio_low', 'ratio_mid', 'ratio_high', 'dominant_frequency',
+    'mode', 'axis',
 ]
 
 

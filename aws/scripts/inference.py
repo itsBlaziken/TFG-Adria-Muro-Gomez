@@ -8,12 +8,14 @@ import pickle
 import numpy as np
 import pandas as pd
 
-# Característiques espectrals en el mateix ordre que durant l'entrenament
+# Característiques en el mateix ordre que durant l'entrenament.
+# Mode i eix s'inclouen perquè el rang de freqüències mesurat varia amb el mode.
 FEATURE_COLS = [
     'rms', 'energy', 'max_amplitude', 'mean_amplitude', 'std_amplitude',
     'peak_to_peak', 'crest_factor', 'temp',
     'energy_low', 'energy_mid', 'energy_high',
     'ratio_low', 'ratio_mid', 'ratio_high', 'dominant_frequency',
+    'mode', 'axis',
 ]
 
 # Descripció de cada tipus de fallo identificat pel sistema

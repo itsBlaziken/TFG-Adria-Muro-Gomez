@@ -141,8 +141,24 @@ hr { border-color: #dde3ea !important; margin: 20px 0 !important; }
 BUCKET = "aeinnova-tfg-836321169819"
 REGION = "eu-west-1"
 
-_FAULT_COLOR_SEQ = ["#e63946", "#f4a261", "#2a9d8f", "#457b9d", "#9b5de5", "#f15bb5"]
+# Colors de severitat: vermell / taronja / verd
 SEV_COLORS = {"HIGH": "#e63946", "MEDIUM": "#f4a261", "LOW": "#2a9d8f", "NONE": "#adb5bd"}
+
+# Colors dels tipus de fallo: completament diferents dels de severitat
+_FAULT_COLOR_SEQ = ["#3a86ff", "#8338ec", "#ff006e", "#ffbe0b", "#0096c7", "#06d6a0"]
+
+# Traducció de les etiquetes de fallo al català
+FAULT_LABEL_CA = {
+    "Type 0 - High Std Amplitude - holgura / impacto mecánico":
+        "Tipus 0 - Alta Desv. Amplitud - folgança / impacte mecànic",
+    "Type 1 - High Energy Mid-Frequency - desalineación":
+        "Tipus 1 - Alta Energia Freqüència Mitja - desalineació",
+    "Type 2 - High Energy Low-Frequency - desbalance mecánico":
+        "Tipus 2 - Alta Energia Baixa Freqüència - desequilibri mecànic",
+    "Type 3 - Balanced Multi-Band Energy - degradación general":
+        "Tipus 3 - Energia Multi-Banda - degradació general",
+    "Comportamiento normal": "Comportament normal",
+}
 
 CHART_LAYOUT = dict(
     paper_bgcolor="rgba(0,0,0,0)",
@@ -167,6 +183,14 @@ def load_data():
     df = pd.concat([features.reset_index(drop=True),
                     predictions.reset_index(drop=True)], axis=1)
     df = df.loc[:, ~df.columns.duplicated()]
+
+    # Convertir timestamp Unix-ms a datetime llegible
+    if "timestamp" in df.columns:
+        df["timestamp"] = pd.to_datetime(df["timestamp"], unit="ms", utc=True).dt.tz_localize(None)
+
+    # Traduir etiquetes de fallo al català
+    if "fault_label" in df.columns:
+        df["fault_label"] = df["fault_label"].map(FAULT_LABEL_CA).fillna(df["fault_label"])
 
     df_anom = df[df["is_anomaly"] == True].copy()
     df["axis_label"]      = df["axis"].map({1.0: "X", 2.0: "Y", 3.0: "Z"}).fillna(df["axis"].astype(str))

@@ -19,24 +19,6 @@
 #   4. Es llança la instència amb un "user data script" (script d'arrencada)
 #      que instal·la les dependències i arrenca Streamlit com a servei
 #   5. La instència s'executa contínuament i el dashboard queda accessible
-#
-# QUÈ ÉS UN USER DATA SCRIPT?
-#   És un script bash que s'executa automàticament la primera vegada que
-#   una instència EC2 arrenca. S'utilitza per instal·lar software i configurar
-#   l'entorn sense haver d'entrar manualment al servidor.
-#
-# QUÈ ÉS SYSTEMD?
-#   És el gestor de serveis de Linux. Configurem Streamlit com a servei
-#   systemd perquè s'arrenci automàticament quan la instència arrenca i
-#   es reiniciï sol si mai es tanca inesperadament.
-#
-# COST APROXIMAT:
-#   t3.micro en marxa contínua: ~7 $/mes
-#   Per evitar costos, atura la instència quan no s'usi:
-#     aws ec2 stop-instances --instance-ids <ID> --region eu-west-1
-#
-# ÚS:
-#   python deploy_dashboard.py
 # ─────────────────────────────────────────────────────────────────────────────
 
 import boto3

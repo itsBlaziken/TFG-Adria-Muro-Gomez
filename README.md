@@ -159,6 +159,7 @@ TFG/
 ├── models/                        # Models entrenats (.pkl)
 ├── data/                          # Dataset 
 ├── doc/                           # Memòria i figures del TFG
+├── seguiment/                     # Informes de seguiment del TFG
 └── outputs/                       # Alertes i prediccions generades
 ```
 

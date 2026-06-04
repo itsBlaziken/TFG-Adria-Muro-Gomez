@@ -15,12 +15,15 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 warnings.filterwarnings('ignore')
 
-# Característiques espectrals que s'extreuen de cada registre
+# Característiques espectrals + mode operatiu i eix físic.
+# Mode i eix s'inclouen perquè el rang de freqüències mesurat varia amb el mode;
+# sense ells el model confon patrons de freqüència de modes diferents.
 FEATURE_COLS = [
     'rms', 'energy', 'max_amplitude', 'mean_amplitude', 'std_amplitude',
     'peak_to_peak', 'crest_factor', 'temp',
     'energy_low', 'energy_mid', 'energy_high',
     'ratio_low', 'ratio_mid', 'ratio_high', 'dominant_frequency',
+    'mode', 'axis',
 ]
 
 
