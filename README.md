@@ -10,7 +10,7 @@ Curs 2025/26
 
 Es presenta un sistema de detecció i classificació d'anomalies per al manteniment predictiu de maquinària rotativa industrial a partir de dades de sensors d'alta precisió. Les senyals de vibració es representen mitjançant vectors de característiques espectrals i estadístiques derivades de les mesures en posició i freqüència. El dataset proporcionat per l'empresa AEInnova comprèn registres reals de dispositius de la família NOD-0007.
 
-En una primera etapa, s'entrena un model **Isolation Forest** amb normalització robusta i ajust del paràmetre de contaminació per detectar comportaments anòmals. En una segona etapa, les anomalies detectades es processen mitjançant tècniques de clustering (**K-Means**) per identificar patrons naturals en les dades, i s'entrena un model supervisat de **Gradient Boosting** capaç de classificar-les en diferents tipologies de fallada amb coherència física (desalineació, desbalanceig i degradació).
+En una primera etapa, s'entrena un model **Isolation Forest** amb normalització robusta i ajust del paràmetre de contaminació per detectar comportaments anòmals. En una segona etapa, les anomalies detectades es processen mitjançant tècniques de clustering (**K-Means**) per identificar patrons naturals en les dades, i s'entrena un model supervisat de **Gradient Boosting** capaç de classificar-les en diferents tipologies de fallada amb coherència física.
 
 El pipeline complet —preprocessament, modelatge i generació d'alertes— es desplega a **AWS SageMaker** amb emmagatzematge centralitzat a **Amazon S3** i visualització mitjançant un dashboard interactiu desplegat a **Amazon EC2**.
 
