@@ -154,9 +154,9 @@ FAULT_LABEL_CA = {
     "Type 1 - High Energy Mid-Frequency - desalineación":
         "Tipus 1 - Alta Energia Freqüència Mitja - desalineació",
     "Type 2 - High Energy Low-Frequency - desbalance mecánico":
-        "Tipus 2 - Alta Energia Alta Freqüència - modes operatius alt rang freqüencial",
-    "Type 3 - Balanced Multi-Band Energy - degradación general":
         "Tipus 3 - Energia Multi-Banda - degradació general",
+    "Type 3 - Balanced Multi-Band Energy - degradación general":
+        "Tipus 2 - Alta Energia Alta Freqüència - modes operatius alt rang freqüencial",
     "Comportamiento normal": "Comportament normal",
 }
 
